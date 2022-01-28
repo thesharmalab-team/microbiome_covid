@@ -16,10 +16,6 @@ source("scripts/my_scripts.R")
 # Loads the local curated data if the data is not there then it will download it 
 source("scripts/get_curatData.R")
 
-# Loads Atlas dataset
-#data(atlas1006)
-# Removes the 2nd time point. 
-#atlas.pseq <- baseline(atlas1006)
 ```
 
 #User defined variables
