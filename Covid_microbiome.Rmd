@@ -1,0 +1,157 @@
+---
+title: "Covid_microbiome"
+output: html_document
+---
+
+#Set up
+```{r setup, include=FALSE,echo=FALSE, warning=FALSE, results='hide', message=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+ # this script loads the packages and installing them if needed
+source("scripts/load_packages.R")
+
+ # this script loads the functions into the space
+source("scripts/my_scripts.R")
+
+# Loads the local curated data if the data is not there then it will download it 
+source("scripts/get_curatData.R")
+
+# Loads Atlas dataset
+#data(atlas1006)
+# Removes the 2nd time point. 
+#atlas.pseq <- baseline(atlas1006)
+```
+
+#User defined variables
+```{r, include=FALSE,echo=FALSE, warning=FALSE, results='hide', message=FALSE}
+# These are go point for the analysis that takes the longest
+beta.go <- TRUE
+siamcat.go <- TRUE
+# Label prefix for PDF that are generated
+#labels editing of files
+output.prefix <- "output/Covid19_"
+#############################################
+# Filtering of the curat dataset
+curat.pseq <- subset_samples(curat.pseq, disease == "healthy" & age_category != "child" & age_category != "newborn" & age_category != "schoolage" )
+
+# All of the pseq that are ever generated are stored within the mypseq. 
+mypseq <- list("raw.curat.pseq" = curat.pseq, "raw.atlas.pseq" = atlas.pseq)
+############################################
+# define the year and the age
+gbd.year <-"2020"
+gbd.age <- "aged 70 or older"
+# set colour theme
+theme_set(theme_Sharmalab())         
+# Data input
+# Input the Our World in Data
+# Covid data set
+data_hosp <- read.csv("~/Documents/Research Project MRes/Covid_final.csv")
+# AD Range of the graphs
+hosp.range <- c(3416,5984109)
+
+#### THIS IS THE HIGH, MEDIUM AND LOW GROUPS THAT WILL BE USED THROUGHOUT THE SCRIPT 
+# loads the Our World in Data and relabels straight away. 
+covid.owid <- as.data.frame(data_hosp, col_names = TRUE) %>%
+  rename_all( tolower)  %>%
+  dplyr::rename("HOSP"="val") %>%
+  dplyr::select(location, HOSP, year, age)
+
+covid.owid$age <- as.factor(covid.owid$age )
+
+covid.owid$iso3c.location <- countrycode(covid.owid$location, origin ='country.name', destination ="iso3c" )
+
+# Covid groupings
+curat.low <- c("DNK","ESP","ITA","DEU","AUT","LUX")
+curat.med <- c() 
+curat.high <- c("FRA","NLD", "SWE", "GBR", "USA","FIN") 
+
+# this are the countries that are dropped.
+curat.drop <- c("BGD", "CHN","DEU","FJI","GHA","IND","KAZ","MDG","MNG","PER","TZA","ISL","ETH","LUX","NOR","SVK")
+
+mythres <- 752.2903345
+mythres1 <- 839.311998
+
+# Figure legends
+disease <- "COVID-19"
+
+# define the labels for the graphs generated
+hosp.label <- "Hospitalised Patients on a given day"
+grp.label <-"Disease group"
+fig_title_gbm_combo <- "Figure 1"
+fig_title_gbm_mgnify <- "Disease burden represented in the Curated microbiome data" 
+fig_title_alpha <- "Alpha Diversity for the Curated dataset"
+fig_title_beta <- "Beta Diversity for the Curated dataset"
+fig_title_abudance <- 'Abundance in the disease grouping in Curated microbiome dataset'
+fig_title_permanova <- "PERMANOVA"
+tab_title_gbm <- paste('Burden of ', disease)
+gbm_ref <- "Our World in Data Study, 2020"
+```
+
+# Main processing scripts
+```{r,include=FALSE,echo=FALSE, warning=FALSE, results='hide', message=FALSE}
+# grabs countries from phyloseq
+curat.covid.class <- get_variable(curat.pseq, "country" )
+curat.covid.class <- fct_collapse(curat.covid.class, LOW = curat.low , MED = curat.med , HIGH = curat.high)
+# reorder
+curat.covid.class <- factor(curat.covid.class, levels = (c("LOW", "MED", "HIGH")))
+# creates a CURAT COVID CLASS in the phyloseq 
+sample_data(curat.pseq)$curat.covid.class = curat.covid.class
+# expected output - curat.covid.class
+table(get_variable(curat.pseq, "curat.covid.class"))
+#data frame for frequency of all countries in the dataset 
+curatcountry <- as.data.frame(table(get_variable(curat.pseq, "country")))
+#####################
+
+# important to subset the data else it adds all of the ages up together
+covid.owid.gg <- aggregate(HOSP~location+year, subset(ad.gbd.sub, age == gbd.age), mean)###############################
+
+#this add the number of microbiome samples for each group 
+# renames the columns so that they match
+curatcountry <- curatcountry %>% dplyr::rename(curat.freq = Freq, country = Var1 )
+country.freq <- curatcountry$curat.freq
+covid.owid.gg <- cbind(covid.owid.gg, curat.freq)
+
+#####################
+curat.age <- covid.owid.gg
+
+###### add the frequency to the GBD data
+curatcountry$curat.label <- NULL
+
+## view the df you just created
+#count(get_variable(psobj_oral_USA,"state"))
+#view(ad.gbd.gg)
+
+```
+
+\newpage
+#Table Global Burden of Disease
+```{r, message=FALSE, warning=FALSE, echo=FALSE}
+# ad.gbd.sub data is the output from the country_prep.R script 
+my.table.data <- ad.gbd.sub
+# creates the data.frame from the GBD table based on year and age
+my.table.data <- my.table.data[my.table.data$year == gbd.year & my.table.data$age == gbd.age , ]
+# removes other columns
+my.table.data <- dplyr::select (my.table.data, "location", "Prevalence", "Incidence", "DALY")
+# gbm.table is a Sharmalab function. expects the levels. This produces the table in flextable format
+gbm.table <- function(my.table.data,gbm.mean.levels) {
+  ft <-arrange(my.table.data, location)
+  ft <-ft %>% dplyr::rename(location = location)
+  ft <- flextable(ft) %>% 
+    footnote( i = 1, j = 2:4,
+              value = as_paragraph(
+                c(gbm_ref)
+              ),
+              ref_symbols = c("a"),
+              part = "header") %>% 
+    colformat_num( j = 3:4, digits = 2) %>% 
+    valign( valign = "bottom", part = "header") %>% 
+    add_header_lines(values = c(tab_title_gbm) ) %>% 
+    bold(part = "header") %>%
+    theme_booktabs() %>% 
+    autofit() %>% 
+    fix_border_issues()
+  return(ft)
+}
+ft <- gbm.table(my.table.data) 
+ft
+```
