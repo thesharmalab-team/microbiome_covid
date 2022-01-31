@@ -28,10 +28,9 @@ siamcat.go <- TRUE
 output.prefix <- "output/Covid19_"
 #############################################
 # Filtering of the curat dataset
-curat.pseq <- subset_samples(curat.pseq, disease == "healthy" & age_category != "child" & age_category != "newborn" & age_category != "schoolage" )
 
 # All of the pseq that are ever generated are stored within the mypseq. 
-mypseq <- list("raw.curat.pseq" = curat.pseq, "raw.atlas.pseq" = atlas.pseq)
+mypseq <- list("raw.curat.pseq" = curat.pseq)
 ############################################
 # define the year and the age
 gbd.year <-"2020"
@@ -41,31 +40,23 @@ theme_set(theme_Sharmalab())
 # Data input
 # Input the Our World in Data
 # Covid data set
-data_hosp <- read.csv("~/Documents/Research Project MRes/Covid_final.csv")
+data_hosp <- read.csv("~/Desktop/Covid_Curat.csv")
 # AD Range of the graphs
 hosp.range <- c(3416,5984109)
 
-#### THIS IS THE HIGH, MEDIUM AND LOW GROUPS THAT WILL BE USED THROUGHOUT THE SCRIPT 
+#### THIS IS THE HIGH AND LOW GROUPS THAT WILL BE USED THROUGHOUT THE SCRIPT 
 # loads the Our World in Data and relabels straight away. 
 covid.owid <- as.data.frame(data_hosp, col_names = TRUE) %>%
   rename_all( tolower)  %>%
-  dplyr::rename("HOSP"="val") %>%
-  dplyr::select(location, HOSP, year, age)
-
-covid.owid$age <- as.factor(covid.owid$age )
-
-covid.owid$iso3c.location <- countrycode(covid.owid$location, origin ='country.name', destination ="iso3c" )
+  dplyr::select(location, hosp_patients)
 
 # Covid groupings
-curat.low <- c("DNK","ESP","ITA","DEU","AUT","LUX")
-curat.med <- c() 
-curat.high <- c("FRA","NLD", "SWE", "GBR", "USA","FIN") 
-
+curat.low <- c("FIN","USA","CAN","DNK","AUT","EST","NLD")
+curat.high <- c("ESP", "ISR", "SWE", "SLV", "GBR", "FRA", "ITA") 
 # this are the countries that are dropped.
-curat.drop <- c("BGD", "CHN","DEU","FJI","GHA","IND","KAZ","MDG","MNG","PER","TZA","ISL","ETH","LUX","NOR","SVK")
+curat.drop <- c("BGD","ETH", "GHA", "HUN", "ISL", "LUX", "NOR", "SVK", "DEU", "FJI", "KAZ", "MDG", "CHN", "MNG", "PER", "RUS", "TZA", "IND")
 
-mythres <- 752.2903345
-mythres1 <- 839.311998
+mythres <- 1848.58
 
 # Figure legends
 disease <- "COVID-19"
@@ -85,37 +76,176 @@ gbm_ref <- "Our World in Data Study, 2020"
 
 # Main processing scripts
 ```{r,include=FALSE,echo=FALSE, warning=FALSE, results='hide', message=FALSE}
-# grabs countries from phyloseq
+# runs the country prep script 
+# no pseq used
+# runs the pseq recode script 
+#source("scripts/pseq_recode.R")
+# CURATED DATA SET
+# grabs the nationality from phyloseq
 curat.covid.class <- get_variable(curat.pseq, "country" )
-curat.covid.class <- fct_collapse(curat.covid.class, LOW = curat.low , MED = curat.med , HIGH = curat.high)
+curat.covid.class <- fct_collapse(curat.covid.class, LOW = curat.low , HIGH = curat.high)
 # reorder
-curat.covid.class <- factor(curat.covid.class, levels = (c("LOW", "MED", "HIGH")))
-# creates a CURAT COVID CLASS in the phyloseq 
+curat.covid.class <- factor(curat.covid.class, levels = (c("LOW", "HIGH")))
+# creates a CURATE COVID CLASS in the phyloseq 
 sample_data(curat.pseq)$curat.covid.class = curat.covid.class
-# expected output - curat.covid.class
-table(get_variable(curat.pseq, "curat.covid.class"))
-#data frame for frequency of all countries in the dataset 
-curatcountry <- as.data.frame(table(get_variable(curat.pseq, "country")))
-#####################
+# dropping the other countries
+country <- get_variable(curat.pseq, "country" )
+country <- droplevels(factor(country), curat.drop) 
+sample_data(curat.pseq)$country = country
 
 # important to subset the data else it adds all of the ages up together
-covid.owid.gg <- aggregate(HOSP~location+year, subset(ad.gbd.sub, age == gbd.age), mean)###############################
+#a <- aggregate(Hosp_patients, subset(covid.owid.sub, age == gbd.age), mean)
+#covid.owid.gg <- a
+curatcountry <- as.data.frame(table(get_variable(curat.pseq, "country")))
 
-#this add the number of microbiome samples for each group 
-# renames the columns so that they match
-curatcountry <- curatcountry %>% dplyr::rename(curat.freq = Freq, country = Var1 )
-country.freq <- curatcountry$curat.freq
-covid.owid.gg <- cbind(covid.owid.gg, curat.freq)
+curat.combined <- covid.owid
 
-#####################
-curat.age <- covid.owid.gg
+# RECODING OF VARIABLES 
+# creates a grouping variable for BMI
+n <- length(sample_data(curat.pseq)$BMI)
+data <- data.frame(id=1:n)
+data$bmi <- sample_data(curat.pseq)$BMI # creates a new variable with BMI in it
+# Classification based upon the ATlas data
+data$bmi[data$bmi <18.5] <- "underweight"
+data$bmi[data$bmi >=45] <- "super obese"
+data$bmi[data$bmi >= 18.5 & data$bmi <25] <- "lean"
+data$bmi[data$bmi >= 25 & data$bmi <30] <- "overweight"
+data$bmi[data$bmi >= 30 & data$bmi <35] <- "obese"
+data$bmi[data$bmi >= 35 & data$bmi <40] <- "severe obese"
+data$bmi[data$bmi >= 40 & data$bmi <45] <- "morbid obese"
+data$bmi <- factor(data$bmi)    
 
-###### add the frequency to the GBD data
-curatcountry$curat.label <- NULL
+# creates a new variable in the phyloseq called BMI
+sample_data(curat.pseq)$bmi_group = data$bmi
+# Check that it works
+#get_variable(pseq, "bmi_group")
 
-## view the df you just created
-#count(get_variable(psobj_oral_USA,"state"))
-#view(ad.gbd.gg)
+
+# same with gender -> sex
+# creates a grouping varaible for BMI
+n <- length(sample_data(curat.pseq)$gender)
+data <- data.frame(id=1:n)
+data$sex <- sample_data(curat.pseq)$gender # creates a new variable with gender in it
+# Classification based upon the ATlas data
+data$sex[data$sex == "female"] <- "female"
+data$sex[data$sex == "male"] <- "male"
+data$sex <- factor(data$sex)
+
+# creates a new variable in the phyloseq called sex
+sample_data(curat.pseq)$sex = data$sex
+
+data <- data.frame(id=1:n)
+
+mypseq[["curat.recode.pseq"]] <- curat.pseq
+
+# Common variables to keep:  "age", "sex", "nationality", "bmi_group", "subject/subjectID", "mnd"
+# sample_variables(pseq)
+# sample_data(pseq)[c(2:16,18:96)] = NULL
+# 
+
+# runs the pseq prep script # The output is; curat.combined.agestd & atlas.curat.combined.agestd
+# curat.pseq & atlas.pseq that contains curat2atlas.mnd.class,curat.mnd.class &  atlas.mnd.class
+#source("scripts/pseq_prep.R")
+pseq_prep_1 <- function(curat.pseq,mypseq) {
+ 
+  # This script loads and then generates the dataframe required later on. 
+  # It uses the classification from the main script. 
+  # The output is; curat.combined.agestd & atlas.curat.combined.agestd
+  # curat.pseq & atlas.pseq that contains curat2atlas.mnd.class,curat.mnd.class &  atlas.mnd.class
+  
+  # INPUTs
+  # curat.pseq
+  # atlas.pseq
+  
+  # OUTPUTS
+  
+  # atlas.pseq
+  # atlas.curat.combined.agestd
+  #"curat.pseq
+  #"curat.combined.agestd
+  # curat.combined
+  
+  
+  # Cleaning up the Taxa
+  message("Cleaning up the taxa")
+  taxa_names(curat.pseq) <- str_remove(taxa_names(curat.pseq), "s__")
+  taxa_names(curat.pseq) <- str_replace(taxa_names(curat.pseq), "_", " ")
+
+
+  # CURATED DATA SET
+  message("Working on the Curat data ")
+  # grabs the nationality from phyloseq
+  curat.covid.class <- get_variable(curat.pseq, "country" )
+  curat.covid.class <- fct_collapse(curat.covid.class, LOW = curat.low , HIGH = curat.high)
+  # reorder
+  curat.covid.class <- factor(curat.covid.class, levels = (c("LOW", "HIGH")))
+  # creates a CURATE COVID CLASS in the phyloseq 
+  sample_data(curat.pseq)$curat.covid.class = curat.covid.class
+  message("Writing the countries into the Curat data")
+  
+  # dropping the other countries
+  country <- get_variable(curat.pseq, "country" )
+  country <- droplevels(factor(country), curat.drop) 
+  sample_data(curat.pseq)$country = country
+
+  # expected output
+  #atlas.mnd.class 
+  
+  #curat.mnd.class
+  # curat2atlas
+  
+  # table(get_variable(atlas.pseq, "atlas.mnd.class"))
+  # table(get_variable(curat.pseq, "curat2atlas.mnd.class"))
+  # table(get_variable(curat.pseq, "curat.mnd.class"))
+  # table(get_variable(curat.pseq, "curat2atlas"))
+  # table(get_variable(curat.pseq, "country"))
+  # table(get_variable(atlas.pseq, "country"))
+  # 
+  # 
+  
+  
+mypseq[["curat.recode.country.pseq"]] <- curat.pseq
+
+message("Returning a list called mypseq \n that contains: \n curat.recode.country.pseq ")
+
+return(mypseq)
+}
+mypseq <- pseq_prep_1(curat.pseq,mypseq)
+
+mydata_prep <- function(mypseq) {
+
+  # this accepts the list from the pseq_prep_2
+  message("The pseq being used are: \n curat.recode.country.pseq ")  
+  curatcountry <- as.data.frame(table(get_variable( mypseq[["curat.recode.country.pseq"]], "curatcountry")))
+  
+  #####################
+  
+  #this add the number of microbiome for each group
+  # renames the columns so that they match
+  atlascountry <- atlascountry %>% dplyr::rename(atlas.freq = Freq, Region = Var1 )
+  mnd.gbd.gg <- left_join(mnd.gbd.gg, atlascountry)
+  
+  curat2atlas <- curat2atlas %>% dplyr::rename(Region = Var1,curat.atlas.freq = Freq )
+  mnd.gbd.gg <- left_join(mnd.gbd.gg, curat2atlas)
+  #####################
+ 
+  mydata <- list("curat.combined.agestd" = curat.combined.agestd,
+                 "curat.combined" = curat.combined)
+  message("Returning mydata that contains:\n curat.combined.agestd \n curat.combined ")
+  
+  return(mydata)
+
+}
+mydata <- mydata_prep(mypseq)
+# output  atlas.pseq, atlas.curat.combined.agestd, curat.pseq, curat.combined.agestd, curat.combined)
+
+# test
+
+
+mypseq <- pseq_filter(mypseq)
+
+list2env(mypseq,envir=.GlobalEnv)
+list2env(mydata,envir=.GlobalEnv)
 
 ```
 
