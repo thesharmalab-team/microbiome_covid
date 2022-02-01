@@ -8,11 +8,11 @@ mydata_prep <- function(mypseq) {
   # renames the columns so that they match
   curatcountry <- curatcountry %>% dplyr::rename(curat.freq = Freq, country = Var1 )
   curat.freq <- curatcountry$curat.freq
-  covid.owid.gg <- cbind(covid.owid.gg, curat.freq)
+  covid.owid <- cbind(covid.owid, curat.freq)
   
-  covid.owid.gg <- cbind(covid.owid.gg, curat.freq)
+  covid.owid <- cbind(covid.owid, curat.freq)
   #####################
-  curat.combined <- covid.owid.gg
+  curat.combined <- covid.owid
   
   ###### add the frequency to the GBD data
   #curatcountry$atlas.label <- NULL

@@ -33,7 +33,7 @@ output.prefix <- "output/Covid19_"
 mypseq <- list("raw.curat.pseq" = curat.pseq)
 ############################################
 # define the year and the age
-gbd.year <-"2020"
+owid.year <-"2020"
 #gbd.age <- "aged 70 or older"
 # set colour theme
 theme_set(theme_Sharmalab())         
@@ -74,8 +74,8 @@ disease <- "COVID-19"
 # define the labels for the graphs generated
 hosp.label <- "Hospitalised Patients on a given day"
 grp.label <-"Disease group"
-fig_title_gbm_combo <- "Figure 1"
-fig_title_gbm_mgnify <- "Disease burden represented in the Curated microbiome data" 
+fig_title_owid_combo <- "Figure 1"
+fig_title_owid_curat <- "Disease burden represented in the Curated microbiome data" 
 fig_title_alpha <- "Alpha Diversity for the Curated dataset"
 fig_title_beta <- "Beta Diversity for the Curated dataset"
 fig_title_abudance <- 'Abundance in the disease grouping in Curated microbiome dataset'
@@ -93,6 +93,8 @@ gbm_ref <- "Our World in Data Study, 2020"
 source("scripts/pseq_prep.R")
 
 mypseq <- pseq_prep_1(curat.pseq,mypseq)
+
+source("scripts/mydata_prep.R")
 
 mydata <- mydata_prep(mypseq)
 # output, curat.combined
@@ -166,12 +168,15 @@ ft
 
 # sets the font size
 myfont <- 18
+#remove duplicate curat.freq columns
+mydata[["curat.combined"]] <- mydata[["curat.combined"]][, !duplicated(colnames(mydata[["curat.combined"]]))]
 
-c1 <- ggplot(mydata[["curat.combined.agestd" ]], aes(x = year, y = DALY, colour = location)) + 
+#all in the year 2020
+#c1 <- ggplot(mydata[["curat.combined"]], aes(x = owid.year, y = hosp_patients, colour = location)) + 
   geom_line() + 
-  ylab(label=mnd.daly.label) + 
+  ylab(label=hosp.label) + 
   xlab(NULL) + theme(legend.position="none") + 
-  ylim(daly.range) +
+  ylim(hosp.range) +
   theme(axis.title.x=element_blank(),
         axis.text.x=element_blank(),
         axis.ticks.x=element_blank(),
@@ -180,13 +185,13 @@ c1 <- ggplot(mydata[["curat.combined.agestd" ]], aes(x = year, y = DALY, colour 
 
 
 ##################### Creates captions #######################
-temp <- subset(mydata[["atlas.curat.combined.agestd" ]], year==gbd.year)
-curat.total.sample <- sum(temp$curat.atlas.freq)
+temp <- mydata[["curat.combined" ]]
+curat.total.sample <- sum(temp$curat.freq)
 
 curat.total.caption <- paste('Total no. microbiome samples =', curat.total.sample)
 ##################### COVID #######################
 
-c1 <- ggplot(covid.owid, aes( area=Freq,fill=Hosp_patients, label = curat.label )) + 
+c2 <- ggplot(covid.owid, aes( area=curat.freq,fill=hosp_patients, label = hosp.label )) + 
   geom_treemap() +
   scale_fill_scico(palette = "buda", limit = hosp.range)  +
   geom_treemap_text( colour = "black", place = "centre", grow = FALSE) +
@@ -195,8 +200,8 @@ c1 <- ggplot(covid.owid, aes( area=Freq,fill=Hosp_patients, label = curat.label 
 
 # this generates the high and label. Uses mythres which is defined above.
 # Curat dataset
-mydata[["curat.combined" ]]$hl.label[mydata[["curat.combined" ]]$Prevalence >= mythres] <- "HIGH"
-mydata[["curat.combined" ]]$hl.label[mydata[["curat.combined" ]]$Prevalence < mythres] <- "LOW"
+mydata[["curat.combined" ]]$hl.label[mydata[["curat.combined" ]]$hosp_patients >= mythres] <- "HIGH"
+mydata[["curat.combined" ]]$hl.label[mydata[["curat.combined" ]]$hosp_patients < mythres] <- "LOW"
 mydata[["curat.combined" ]]$hl.label <- factor(mydata[["curat.combined" ]]$hl.label)
 
 
@@ -208,17 +213,16 @@ mydata[["curat.combined" ]]$hl.label <- factor(mydata[["curat.combined" ]]$hl.la
 # temp <- kmeans(temo$DALY, 2)
 # temo$kmeans <- temp$cluster
 
-ct4 <- ggplot(subset(mydata[["curat.combined" ]], year==gbd.year & age == gbd.age), aes( area=Freq,fill=hl.label, label = curat.label )) + 
+ct1 <- ggplot(subset(mydata[["curat.combined" ]]), aes( area=curat.freq,fill=hl.label, label = hosp.label )) + 
   geom_treemap() + 
   scale_color_scico(palette = "vik")  +
   geom_treemap_text( colour = "black", place = "centre", grow = FALSE) + 
   theme(legend.position="bottom") + 
-  labs(fill = mnd.incid.label )
+  labs(fill = hosp.label )
 
 # Combines the Curat figures
-figure.curat.class <- c1 + ct1 + c2 + ct2  + c3 + ct3 +  plot_spacer() + ct4 + 
-  plot_layout(ncol = 2) + plot_annotation(
-  title = fig_title_gbm_curat,
+figure.curat.class <- c2 + ct1, plot_layout(ncol = 2) + plot_annotation(
+  title = fig_title_owid_curat,
   caption = curat.total.caption
 ) & theme(plot.tag = element_text(size = 14))
 
