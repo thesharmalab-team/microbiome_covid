@@ -95,7 +95,7 @@ source("scripts/pseq_prep.R")
 mypseq <- pseq_prep_1(curat.pseq,mypseq)
 
 mydata <- mydata_prep(mypseq)
-# output, curat.combined)
+# output, curat.combined
 
 mypseq <- pseq_filter(mypseq)
 
