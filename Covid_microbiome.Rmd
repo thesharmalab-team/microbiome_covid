@@ -332,3 +332,44 @@ save_plot(paste(output.prefix, "figure.alpha.group.png", sep="_"), fig.alpha.gro
 # Include sthe graphic
 include_graphics(paste(output.prefix, "figure.alpha.group.png", sep="_"))
 ```
+
+# Abundance Graph
+```{r,message=FALSE, warning=FALSE, out.height= "200%" , echo=FALSE}
+
+# CURATED Get the Phylum
+curat.pseq.comp.filter.phylum <- aggregate_taxa(mypseq[["curat.recode.country.comp.filter.pseq"]], "Phylum")
+
+# CURAT plot
+curated.barplot  <- plot_composition(curat.pseq.comp.filter.phylum, average_by = "curat.covid.class", x.label = "Disease Grouping", plot.type = "barplot", title = "Curated Abundance Bar Plot") + 
+  guides(fill=guide_legend(title="Phylum")) + 
+  theme(legend.text = element_text(face="italic")) + 
+  theme_classic() + 
+  labs(x="Disease Grouping") + 
+  theme(legend.title = element_text(size = 10), legend.text = element_text(size = 10)) + 
+  scale_x_discrete(labels=c("LOW" = "Low","HIGH" = "High")) + 
+  scale_fill_brewer(palette = "Paired") 
+
+# Abundance Profile
+curat.pseq.comp.filter.phylum2 <- phyloseq::tax_glom(mypseq[["curat.recode.country.comp.filter.pseq"]], "Phylum")
+
+phyloseq::taxa_names(curat.pseq.comp.filter.phylum2) <- phyloseq::tax_table(curat.pseq.comp.filter.phylum2)[, "Phylum"]
+
+phyloseq::otu_table(curat.pseq.comp.filter.phylum2)[1:5, 1:5]
+
+
+curat.abund <- phyloseq::psmelt(curat.pseq.comp.filter.phylum2) %>%
+ggplot(data = ., aes(x = curat.covid.class , y = Abundance)) +
+  geom_boxplot(outlier.shape  = NA) +
+  geom_jitter(aes(color = OTU), height = 0, width = .2) +
+  labs(x = "", y = "Abundance\n") +
+  facet_wrap(~ OTU, scales = "free")
+
+p.abdunace <- curated.barplot + curat.abund + plot_annotation(tag_levels = 'A',
+  title = fig_title_abudance) 
+
+save_plot(paste(output.prefix, "figure.abdunace.png", sep="_"), p.abdunace, ncol = 2, base_height = 11.69, base_width = 8.2) 
+
+include_graphics(paste(output.prefix, "figure.abdunace.png", sep="_"))
+
+
+```
