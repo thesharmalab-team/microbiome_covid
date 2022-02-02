@@ -370,6 +370,58 @@ p.abdunace <- curated.barplot + curat.abund + plot_annotation(tag_levels = 'A',
 save_plot(paste(output.prefix, "figure.abdunace.png", sep="_"), p.abdunace, ncol = 2, base_height = 11.69, base_width = 8.2) 
 
 include_graphics(paste(output.prefix, "figure.abdunace.png", sep="_"))
+```
 
+#Beta Diversity
+```{r}
+
+#Remember that curat.recode.country.pseq is already relative abundance 
+devtools::install_github("vmikk/metagMisc")
+library(metagMisc)
+beta_curat <- mypseq[["curat.recode.country.pseq" ]] %>%
+  phyloseq_rm_na_tax() %>% # removes the strain that is empty
+  subset_taxa(!is.na(Genus)) %>% # Keeps the Species only
+  prune_samples(sample_sums(.) >= 10, .) %>%# removes abudance that are less than 10
+  subset_samples( !is.na(curat.covid.class)) # removes the NA
+
+#ordinated_taxa = ordinate(t7, method="NMDS", distance="bray")
+
+ordinated_taxa = ordinate(beta_curat, method="PCoA", distance="bray")
+
+p <- plot_ordination(beta_curat, ordinated_taxa, color="curat.covid.class", 
+                title = "Bray-Curtis Principal Coordinates Analysis")
+
+#p1 < - plot_scree(ordinated_taxa, title="Screeplot")
+
+#plot_net(beta_curat, "bray", color = "curat.covid.class")
+
+```
+
+#PERMANOVA
+```{r}
+# this function uses the entire list. 
+mypermanova <- perma_d_two(mypseq)
+
+# Seperates the datasets
+permanova.curat <- mypermanova[["permanova.curat"]]
+
+  p1 <- ggplot(permanova.curat,aes(reorder(label, top.coef),top.coef,fill = top.coef > 0)) +
+    geom_col(show.legend = FALSE,) + 
+    coord_flip() +  
+    theme(label = element_text(face = "bold.italic", color = "blue", size = 16)) + 
+    xlab('Taxa') + ylab('p value')  + 
+    theme_minimal(base_size = 20)  + 
+    annotate("text", x = 2.5, y = 0.02, label = "Harmful Taxa") + 
+    annotate("text", x = 19, y = -0.01, label = "Beneficial Taxa") +
+    md_theme_minimal() #This is required for the Italics 
+  
+  fig.permanova.group <- p1 +
+    plot_annotation(tag_levels = 'A',
+    title = fig_title_permanova ,
+    subtitle = 'Curat data') 
+
+save_plot(paste(output.prefix, "figure.permanova.group.png", sep="_"), fig.permanova.group, ncol = 1, base_height = 11.69, base_width = 8.2)  
+
+include_graphics(paste(output.prefix, "figure.permanova.group.png", sep="_"))
 
 ```
