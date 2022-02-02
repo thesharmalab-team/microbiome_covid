@@ -295,3 +295,40 @@ curat.tabl1 <-my_curat_table(mypseq)
 curat.tabl1
 
 ```
+
+# Alpha Diversity
+```{r, message=FALSE, warning=FALSE, out.height= "200%" , echo=FALSE}
+
+# CURAT  Generates the meta data
+curat.meta <- alpha_d_curat(mypseq[["curat.recode.country.comp.filter.pseq"]])
+
+# CURAT generates the country alpha diversity. The number in the palettes must equal the number of groups in bmi.pairs
+alpha.p1.curat <-ggviolin(curat.meta, x = "country", y = "Shannon",
+                  add = "boxplot", fill = "country") +
+    theme(axis.text.x = element_blank(),axis.ticks = element_blank()) + 
+    theme(legend.position="bottom",legend.title = element_blank()) + 
+    xlab("") + 
+  scale_fill_Sharmalab(palette="curat")  
+
+# CURAT high and low graphs   
+alpha.p2.curat <- ggviolin(data=subset(curat.meta, !is.na(curat.covid.class)), x = "curat.covid.class", y = "Shannon", add = "boxplot", fill = "curat.covid.class", na.rm = TRUE)  + 
+  scale_fill_Sharmalab(palette="two_group_curat")  
+
+# adds the stats  
+alpha.p2.curat <<- alpha.p2.curat + stat_compare_means(comparisons = covid.pairs) + 
+    xlab("Covid Hospitalisations") + 
+    theme(legend.position="bottom", axis.text.x = element_blank(),axis.ticks = element_blank()) +
+    guides(fill=guide_legend(title="Covid Hospitalisations"))
+
+# Combines the graphs to the final figure
+fig.alpha.curat.group <- alpha.p1.curat + alpha.p2.curat +
+  plot_layout(guides = 'collect') + plot_annotation(tag_levels = 'A',
+  title = fig_title_alpha ,
+  subtitle = 'Individual Countries and resulting Disease Group') & theme(legend.position = 'bottom')
+
+# Saves the output
+save_plot(paste(output.prefix, "figure.alpha.group.png", sep="_"), fig.alpha.group, ncol = 2, base_height = 11.69, base_width = 8.2)  
+
+# Include sthe graphic
+include_graphics(paste(output.prefix, "figure.alpha.group.png", sep="_"))
+```
