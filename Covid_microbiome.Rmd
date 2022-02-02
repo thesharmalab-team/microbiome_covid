@@ -66,7 +66,7 @@ curat.high <- c("ESP", "ISR", "SWE", "SLV", "GBR", "FRA", "ITA")
 # this are the countries that are dropped.
 curat.drop <- c("BGD","ETH", "GHA", "HUN", "ISL", "LUX", "NOR", "SVK", "DEU", "FJI", "KAZ", "MDG", "CHN", "MNG", "PER", "RUS", "TZA", "IND")
 
-mythres <- 1848.58
+mythres <- 184858
 
 # Figure legends
 disease <- "COVID-19"
@@ -191,7 +191,7 @@ curat.total.sample <- sum(temp$curat.freq)
 curat.total.caption <- paste('Total no. microbiome samples =', curat.total.sample)
 ##################### COVID #######################
 
-c2 <- ggplot(covid.owid, aes( area=curat.freq,fill=hosp_patients, label = hosp.label )) + 
+c2 <- ggplot(covid.owid, aes( area=curat.freq,fill=hosp_patients, label = location )) + 
   geom_treemap() +
   scale_fill_scico(palette = "buda", limit = hosp.range)  +
   geom_treemap_text( colour = "black", place = "centre", grow = FALSE) +
@@ -213,7 +213,7 @@ mydata[["curat.combined" ]]$hl.label <- factor(mydata[["curat.combined" ]]$hl.la
 # temp <- kmeans(temo$DALY, 2)
 # temo$kmeans <- temp$cluster
 
-ct1 <- ggplot(subset(mydata[["curat.combined" ]]), aes( area=curat.freq,fill=hl.label, label = hosp.label )) + 
+ct1 <- ggplot(subset(mydata[["curat.combined" ]]), aes( area=curat.freq,fill=hl.label, label = location )) + 
   geom_treemap() + 
   scale_color_scico(palette = "vik")  +
   geom_treemap_text( colour = "black", place = "centre", grow = FALSE) + 
@@ -221,7 +221,7 @@ ct1 <- ggplot(subset(mydata[["curat.combined" ]]), aes( area=curat.freq,fill=hl.
   labs(fill = hosp.label )
 
 # Combines the Curat figures
-figure.curat.class <- c2 + ct1, plot_layout(ncol = 2) + plot_annotation(
+figure.curat.class <- c2 + ct1 + plot_layout(ncol = 2) + plot_annotation(
   title = fig_title_owid_curat,
   caption = curat.total.caption
 ) & theme(plot.tag = element_text(size = 14))
