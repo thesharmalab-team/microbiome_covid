@@ -233,3 +233,65 @@ save_plot(paste(output.prefix, "figure.curat.class.png", sep="_"), figure.curat.
 include_graphics(paste(output.prefix, "figure.curat.class.png", sep="_"))
 
 ```
+
+# Demographic data
+\newpage
+```{r, results="asis" }
+
+source("scripts/my_cur_table.R")
+
+# Generates the table. This is a Sharmalab function
+curat.tabl1 <- my_cur_table(curat.recode.country.pseq)
+# Prints it
+curat.tabl1 
+
+
+# Generates the table. This is a Sharmalab function
+my_mgnify_table <- function(psobj_gut_USA){
+  
+  # subset this pseq
+  mgnify.pseq <- subset_samples(psobj_gut_USA, mgnify.ad.class == "HIGH" | mgnify.ad.class == "LOW")
+  
+  #get the length of the total numbers
+  n <- length(sample_data(psobj_gut_USA)$mgnify.ad.class)
+  data <- data.frame(id=1:n)
+  
+  # Get the classificationo
+  data$mgnify.ad.class <- sample_data(psobj_gut_USA)$mgnify.ad.class
+  
+  #Get the covariates
+  #Gender
+  data$gender <- sample_data(psobj_gut_USA)$sample_sex
+  # replace the NA with unknown
+  data$gender <- fct_explicit_na(data$gender, na_level = "unknown")
+  
+  t1 <- data %>%  set_labels(list(gender = "Gender")) %>% 
+    tableby(mgnify.ad.class ~ gender, 
+            data = ., 
+            test=FALSE,
+            numeric.stats=c( "mean","sd"),
+            cat.stats=c("count"),
+            digits=2 ) %>%
+    as.data.frame() %>% dplyr::select(.,
+                               -group.term,
+                               -group.label,
+                               -strata.term,
+                               -term,
+                               -variable.type,
+                               -variable) %>%
+    dplyr::rename(., "Variable" = label, "Low AD prevalence Group" = LOW, "High AD prevalence group" = HIGH)
+
+  t1 <- flextable(t1) %>% 
+    add_header_lines(values = c("Demographic Data: Curat dataset") ) %>% 
+    bold(part = "header") %>%
+    theme_booktabs() %>% 
+    autofit() %>% 
+    fix_border_issues()
+  return(t1)
+}
+
+curat.tabl1 <-my_curat_table(mypseq)
+# Prints on a new page
+curat.tabl1
+
+```

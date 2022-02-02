@@ -1,14 +1,14 @@
 my_cur_table <- function(mypseq){
   
-  curat.pseq <- subset_samples(mypseq[["curat.recode.country.pseq"]], curat.mnd.class == "HIGH" | curat.mnd.class == "LOW")
+  curat.pseq <- subset_samples(mypseq[["curat.recode.country.pseq"]], curat.covid.class == "HIGH" | curat.covid.class == "LOW")
     
   # defines the length of the new frame
-  n <- length(sample_data(curat.pseq)$curat.mnd.class)
+  n <- length(sample_data(curat.pseq)$curat.covid.class)
   message(paste(c("The total number of microbiome samples:", n), collapse = " "))
   data <- data.frame(id=1:n)
   
   # get the disease classification. 
-  data$curat.mnd.class <- sample_data(curat.pseq)$curat.mnd.class
+  data$curat.covid.class <- sample_data(curat.pseq)$curat.covid.class
   # brings in the co-variates
   data$bmi <- sample_data(curat.pseq)$bmi_group
   # replace the NA with unknown
@@ -49,7 +49,7 @@ my_cur_table <- function(mypseq){
   #table1(~ age  +  bmi | curat.mnd.class, data=data)   
   #table_one <- tableby(curat.mnd.class ~ bmi + age, data = data)
   t1 <- data %>%  set_labels(list(bmi = "BMI", age = "Age", gender = "Gender")) %>% 
-    tableby(curat.mnd.class ~ gender + age + bmi, data = .,
+    tableby(curat.covid.class ~ gender + age + bmi, data = .,
             test=FALSE,
             numeric.stats=c( "mean","sd"),
             cat.stats=c("count"), 
