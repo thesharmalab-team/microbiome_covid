@@ -1,6 +1,6 @@
 my_cur_table <- function(mypseq){
   
-  curat.pseq <- subset_samples(mypseq[["curat.recode.country.pseq"]], curat.covid.class == "HIGH" | curat.covid.class == "LOW")
+  curat.pseq <- subset_samples(mypseq[["curat.recode.pseq"]], curat.covid.class == "HIGH" | curat.covid.class == "LOW")
     
   # defines the length of the new frame
   n <- length(sample_data(curat.pseq)$curat.covid.class)

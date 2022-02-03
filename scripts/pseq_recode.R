@@ -17,7 +17,7 @@ data$bmi <- factor(data$bmi)
 # creates a new variable in the phyloseq called BMI
 sample_data(curat.pseq)$bmi_group = data$bmi
 # Check that it works
-#get_variable(pseq, "bmi_group")
+#get_variable(curat.pseq, "bmi_group")
 
 
 # same with gender -> sex
@@ -33,34 +33,27 @@ data$sex <- factor(data$sex)
 # creates a new variable in the phyloseq called sex
 sample_data(curat.pseq)$sex = data$sex
 
-n <- length(sample_data(atlas.pseq)$subject)
+n <- length(sample_data(curat.pseq)$subject)
 data <- data.frame(id=1:n)
-# creates a new variable with subjectID in it
-data$subjectID <- sample_data(atlas.pseq)$subject
-
-# creates a new variable in the phyloseq called bmi_group
-sample_data(atlas.pseq)$subjectID = data$subjectID
 
 # Regroup age category in atlas
-n <- length(sample_data(atlas.pseq)$age)
+n <- length(sample_data(curat.pseq)$age)
 data <- data.frame(id=1:n)
-data$age_c <- sample_data(atlas.pseq)$age # creates a new variable with age in it
+data$age_c <- sample_data(curat.pseq)$age # creates a new variable with age in it
 # Classification based upon the Atlas data
-# data$age_c[data$age_c >= 18 & data$age_c <65] <- "adult"
-data$age_c[data$age_c >=65] <- "senior"
-data$age_c[data$age_c <65] <- "adult"
+# data$age_c[data$age_c >= 18 & data$age_c <70] <- "adult"
+data$age_c[data$age_c >=70] <- "senior"
+data$age_c[data$age_c <70] <- "adult"
 data$age_c <- factor(data$age_c)
 
 # creates a new variable in the phyloseq called bmi_group
-sample_data(atlas.pseq)$age_category = data$age_c
+sample_data(curat.pseq)$age_category = data$age_c
 
 
-
-mypseq[["atlas.recode.pseq"]] <- atlas.pseq
 mypseq[["curat.recode.pseq"]] <- curat.pseq
 
 
-# Common variables to keep:  "age", "sex", "nationality", "bmi_group", "subject/subjectID", "mnd"
+# Common variables to keep:  "age", "sex", "nationality", "bmi_group", "covid"
 # sample_variables(pseq)
 # sample_data(pseq)[c(2:16,18:96)] = NULL
 # 
