@@ -40,8 +40,13 @@ theme_set(theme_Sharmalab())
 # Data input
 # Input the Our World in Data
 # Covid data set
+data_hosp_pop <- read.csv("~/Desktop/Covid_Curat_pop.csv")
 data_hosp <- read.csv("~/Desktop/Covid_Curat.csv")
 data_hosp[1] <- NULL
+#get data hosp_by_pop in main csv 
+hosp_by_pop <- data_hosp_pop$hosp_by_pop
+data_hosp <- cbind(data_hosp, hosp_by_pop)
+
 # AD Range of the graphs
 hosp.range <- c(3416,5984109)
 
@@ -49,7 +54,7 @@ hosp.range <- c(3416,5984109)
 # loads the Our World in Data and relabels straight away. 
 covid.owid <- as.data.frame(data_hosp, col_names = TRUE) %>%
   rename_all( tolower)  %>%
-  dplyr::select(location, hosp_patients, aged_70_older, gdp_per_capita, human_development_index)
+  dplyr::select(location, hosp_patients, aged_70_older, gdp_per_capita, human_development_index, hosp_by_pop, population)
 
 curatcountry.list <- c("SWE","FIN","DNK","NLD","ITA","ESP","FRA","USA","GBR","AUT", "CAN", "ISR", "SLV", "EST")
 
@@ -66,7 +71,7 @@ curat.high <- c("ESP", "ISR", "SWE", "SLV", "GBR", "FRA", "ITA")
 # this are the countries that are dropped.
 curat.drop <- c("BGD","ETH", "GHA", "HUN", "ISL", "LUX", "NOR", "SVK", "DEU", "FJI", "KAZ", "MDG", "CHN", "MNG", "PER", "RUS", "TZA", "IND")
 
-mythres <- 184858
+mythres <- 1848.58
 
 # Figure legends
 disease <- "COVID-19"
@@ -121,40 +126,6 @@ my.table.data <- covid.owid
 
 # gbm.table is a Sharmalab function. expects the levels. This produces the table in flextable format
 
-gbm.table <- function(my.table.data) {
-  ft <-arrange(my.table.data, location)
-  #ft <-ft %>% dplyr::rename(Country = location) 
-  # creates the means
-  #ft.mean <-  summaryBy( . ~ Region, data = ft) %>%
-    #add_row()
-  #ft <- as_grouped_data(ft, groups = c("Region"))
-  
-  # Tidy's up the data and renames and then inserts a column with Total 
-  #ft.mean <-ft.mean %>% 
-    #dplyr::rename(DALY = DALY.mean,Prevalence = Prevalence.mean, Incidence = Incidence.mean) %>% 
-   # add_column( Country = "Mean", .after = 1)
-  # Intersts the rows. The number here are critical 
-  #ft<- insertRows(ft, gbm.mean.levels, new = ft.mean, rcurrent = FALSE)
-  # this removes the country label for the means
-  #ft[gbm.mean.levels,1] <- ""
-  ft <- flextable(ft) %>% 
-    footnote( i = 1, j = 3:5,
-              value = as_paragraph(
-                c(gbm_ref)
-              ),
-              ref_symbols = c("a"),
-              part = "header") %>% 
-    colformat_num( j = 3:5, digits = 2) %>% 
-    valign( valign = "bottom", part = "header") %>% 
-    add_header_lines(values = c(tab_title_gbm) ) %>% 
-    bold(part = "header") %>%
-    #bold(i = gbm.mean.levels) %>%
-    theme_booktabs() %>% 
-    autofit() %>% 
-    fix_border_issues()
-  return(ft)
-}
-
 ft <- gbm.table(my.table.data) 
 ft
 ```
@@ -171,19 +142,6 @@ myfont <- 18
 #remove duplicate curat.freq columns
 mydata[["curat.combined"]] <- mydata[["curat.combined"]][, !duplicated(colnames(mydata[["curat.combined"]]))]
 
-#all in the year 2020
-#c1 <- ggplot(mydata[["curat.combined"]], aes(x = owid.year, y = hosp_patients, colour = location)) + 
-  geom_line() + 
-  ylab(label=hosp.label) + 
-  xlab(NULL) + theme(legend.position="none") + 
-  ylim(hosp.range) +
-  theme(axis.title.x=element_blank(),
-        axis.text.x=element_blank(),
-        axis.ticks.x=element_blank(),
-        text = element_text(size = myfont)) + 
-  scale_color_Sharmalab(palette="curat")
-
-
 ##################### Creates captions #######################
 temp <- mydata[["curat.combined" ]]
 curat.total.sample <- sum(temp$curat.freq)
@@ -191,7 +149,7 @@ curat.total.sample <- sum(temp$curat.freq)
 curat.total.caption <- paste('Total no. microbiome samples =', curat.total.sample)
 ##################### COVID #######################
 
-c2 <- ggplot(covid.owid, aes( area=curat.freq,fill=hosp_patients, label = location )) + 
+c2 <- ggplot(covid.owid, aes( area=curat.freq,fill=hosp_by_pop, label = location )) + 
   geom_treemap() +
   scale_fill_scico(palette = "buda", limit = hosp.range)  +
   geom_treemap_text( colour = "black", place = "centre", grow = FALSE) +
@@ -200,8 +158,8 @@ c2 <- ggplot(covid.owid, aes( area=curat.freq,fill=hosp_patients, label = locati
 
 # this generates the high and label. Uses mythres which is defined above.
 # Curat dataset
-mydata[["curat.combined" ]]$hl.label[mydata[["curat.combined" ]]$hosp_patients >= mythres] <- "HIGH"
-mydata[["curat.combined" ]]$hl.label[mydata[["curat.combined" ]]$hosp_patients < mythres] <- "LOW"
+mydata[["curat.combined" ]]$hl.label[mydata[["curat.combined" ]]$hosp_by_pop >= mythres] <- "HIGH"
+mydata[["curat.combined" ]]$hl.label[mydata[["curat.combined" ]]$hosp_by_pop < mythres] <- "LOW"
 mydata[["curat.combined" ]]$hl.label <- factor(mydata[["curat.combined" ]]$hl.label)
 
 
