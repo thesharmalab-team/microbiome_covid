@@ -40,21 +40,16 @@ theme_set(theme_Sharmalab())
 # Data input
 # Input the Our World in Data
 # Covid data set
-data_hosp_pop <- read.csv("~/Desktop/Covid_Curat_pop.csv")
-data_hosp <- read.csv("~/Desktop/Covid_Curat.csv")
-data_hosp[1] <- NULL
-#get data hosp_by_pop in main csv 
-hosp_by_pop <- data_hosp_pop$hosp_by_pop
-data_hosp <- cbind(data_hosp, hosp_by_pop)
+data_hosp <- read.csv("~/Desktop/Covid_Curat_pop.csv")
 
 # AD Range of the graphs
-hosp.range <- c(3416,5984109)
+hosp.range <- c(258.09,5621.29)
 
 #### THIS IS THE HIGH AND LOW GROUPS THAT WILL BE USED THROUGHOUT THE SCRIPT 
 # loads the Our World in Data and relabels straight away. 
 covid.owid <- as.data.frame(data_hosp, col_names = TRUE) %>%
   rename_all( tolower)  %>%
-  dplyr::select(location, hosp_patients, aged_70_older, gdp_per_capita, human_development_index, hosp_by_pop)
+  dplyr::select(location, hosp_patients, aged_70_older, gdp_per_capita, human_development_index, number_samples, population, hosp_by_pop)
 
 curatcountry.list <- c("SWE","FIN","DNK","NLD","ITA","ESP","FRA","USA","GBR","AUT", "CAN", "ISR", "SLV", "EST")
 
