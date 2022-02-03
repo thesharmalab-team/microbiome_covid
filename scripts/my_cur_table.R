@@ -73,5 +73,3 @@ my_cur_table <- function(mypseq){
     fix_border_issues()
   return(t1)
 }
-# 
-
