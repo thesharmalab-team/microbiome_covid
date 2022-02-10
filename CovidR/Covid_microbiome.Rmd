@@ -48,7 +48,7 @@ theme_set(theme_Sharmalab())
 # Data input
 # Input the Our World in Data
 # Covid data set
-data_hosp <- read.csv("~/Documents/Covid/Covid/Covid_Curat_pop.csv")
+data_hosp <- read.csv("Covid_Curat_pop.csv")
 
 # AD Range of the graphs
 hosp.range <- c(258.09,5621.29)
