@@ -140,7 +140,7 @@ ft <- gbm.table(my.table.data)
 ft
 ```
 
-
+#Global Burden Graphs
 ```{r,message=FALSE, warning=FALSE, out.height= "200%" , echo=FALSE}
 # plots the graphs 
 #the key inputs are mydata ; curat.combined & atlas.curat.combined
