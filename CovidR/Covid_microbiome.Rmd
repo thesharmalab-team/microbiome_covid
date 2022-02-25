@@ -36,6 +36,8 @@ curat.pseq@sam_data[["age"]][is.na(curat.pseq@sam_data[["age"]])] <- -1
 curat.pseq <- subset_samples(curat.pseq, age != between(age, 0, 2))
 #rename back to NAs
 curat.pseq@sam_data[["age"]][curat.pseq@sam_data[["age"]]== -1] <- "NA"
+#remove age 
+curat.pseq@sam_data[["age"]] <- NULL
 
 # All of the pseq that are ever generated are stored within the mypseq. 
 mypseq <- list("raw.curat.pseq" = curat.pseq)
@@ -254,8 +256,8 @@ source("scripts_covid/pseq_recode.R")
   
   # stats for age:
   # for whole dataset
-  a <- summary(data$age)
-  b <- sd(data$age,na.rm=T)
+  a <- summary(data$age_category)
+  b <- sd(data$age_category,na.rm=T)
   # by group
   c <- aggregate(. ~ curat.covid.class, data, function(x) c(mean = mean(x), sd = sd(x)))
   # print
