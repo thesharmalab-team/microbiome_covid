@@ -100,6 +100,8 @@ fig_title_abudance <- 'Abundance in the hospitalisation grouping in Curated micr
 fig_title_permanova <- "PERMANOVA"
 tab_title_gbm <- paste('Burden of ', disease)
 gbm_ref <- "Our World in Data Study, 2020"
+
+#cowid.owid<- covid.owid[order(covid.owid[,'location']), ]
 ```
 
 # Main processing scripts

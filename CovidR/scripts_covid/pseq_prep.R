@@ -27,15 +27,17 @@ sample_data(curat.pseq)$curat.covid.class = curat.covid.class
 # 
 
 curatcountry <- as.data.frame(table(get_variable(curat.pseq, "curatcountry")))
-
 #############################
 
 #this add the number of microbiome for each group
 # renames the columns so that they match
-curatcountry <- curatcountry %>% dplyr::rename(curat.freq = Freq, country = Var1 )
-curat.freq <- curatcountry$curat.freq
-covid.owid <- cbind(covid.owid, curat.freq)
+curatcountry <- curatcountry %>% dplyr::rename(curat.freq = Freq, location = Var1 )
 
+curatcountry <- curatcountry[order(curatcountry[,'location']), ]
+
+curat.freq <- curatcountry$curat.freq
+
+covid.owid <- merge(covid.owid, curatcountry, by = "location")
 #####################
 curat.combined <- covid.owid
 
