@@ -334,7 +334,6 @@ save_plot(paste(output.prefix, "figure.alpha.group.png", sep="_"), fig.alpha.cur
 # Include sthe graphic
 include_graphics(paste(output.prefix, "figure.alpha.group.png", sep="_"))
 ```
-```
 
 # Abundance Graph
 ```{r,message=FALSE, warning=FALSE, out.height= "200%" , echo=FALSE}
@@ -350,7 +349,9 @@ curated.barplot  <- plot_composition(curat.pseq.comp.filter.phylum, average_by =
   labs(x="Disease Grouping") + 
   theme(legend.title = element_text(size = 16), legend.text = element_text(size = 16)) + 
   scale_x_discrete(labels=c("LOW" = "Low","HIGH" = "High")) + 
-  scale_fill_brewer(palette = "Paired") 
+  scale_fill_brewer(palette = "Paired") +
+   theme(axis.title.y = element_text(size = 16)) +
+   theme(axis.title.x = element_text(size = 16)) 
 
 # Abundance Profile
 curat.pseq.comp.filter.phylum2 <- phyloseq::tax_glom(mypseq[["curat.recode.country.comp.filter.pseq"]], "Phylum")
@@ -377,7 +378,6 @@ include_graphics(paste(output.prefix, "figure.abdunace.png", sep="_"))
 
 #Beta Diversity
 ```{r}
-
 #Remember that curat.recode.country.pseq is already relative abundance 
 devtools::install_github("vmikk/metagMisc")
 library(metagMisc)
@@ -392,7 +392,9 @@ beta_curat <- mypseq[["curat.recode.country.pseq" ]] %>%
 ordinated_taxa = ordinate(beta_curat, method="PCoA", distance="bray")
 
 p <- plot_ordination(beta_curat, ordinated_taxa, color="curat.covid.class", 
-                title = "Bray-Curtis Principal Coordinates Analysis")
+                title = "Bray-Curtis Principal Coordinates Analysis") + theme(axis.title.y = element_text(size = 16)) +
+   theme(axis.title.x = element_text(size = 16)) + 
+   guides(fill=guide_legend(title="Covid Hospitalisations", title.theme = element_text(size = 16)))
 
 #p1 < - plot_scree(ordinated_taxa, title="Screeplot")
 
@@ -418,7 +420,7 @@ permanova.curat <- mypermanova[["permanova.curat"]]
     theme(label = element_text(face = "bold.italic", color = "blue", size = 16)) + 
     xlab('Taxa') + ylab('p value')  + 
     theme_minimal(base_size = 20)  + 
-    annotate("text", x = 2.5, y = 0.02, label = "Harmful Taxa") + 
+    annotate("text", x = 2.5, y = 0.01, label = "Harmful Taxa") + 
     annotate("text", x = 19, y = -0.01, label = "Beneficial Taxa") +
     md_theme_minimal() #This is required for the Italics 
   
@@ -430,103 +432,5 @@ permanova.curat <- mypermanova[["permanova.curat"]]
 save_plot(paste(output.prefix, "figure.permanova.group.png", sep="_"), fig.permanova.group, ncol = 1, base_height = 11.69, base_width = 8.2)  
 
 include_graphics(paste(output.prefix, "figure.permanova.group.png", sep="_"))
-
-```
-
-#  SIAMCAT 
-```{r}
-
-#create the curat label
-label.curat <- create.label(meta=sample_data(mypseq[["curat.recode.country.comp.pseq" ]]),
-                      label = "curat.covid.class",
-                      case = c("HIGH"), control = "LOW")
-
-# Create SIAMCAT object
-siamcat.curat <- siamcat(phyloseq=mypseq[["curat.recode.country.comp.pseq" ]], label=label.curat)
-
-# Feature Filtering
-siamcat.curat <- filter.features(siamcat.curat, 
-                           cutoff=1e-04, 
-                           filter.method = 'abundance', 
-                           feature.type = 'original')
-
-```
-
-#SIAMCAT Curated
-```{r}
-
-if (  TRUE == siamcat.go ) {
-
-# Association Testing  "RdYlBu"  "#00B0FF", "#FFD740" + "#EC407A", "#00B0FF"
-check.associations(siamcat.curat, 
-                   fn.plot=paste(output.prefix, "figure.SIAMCAT.ckassn.curat.pdf", sep="_"), 
-                   color.scheme =c("#FFCE53", "#4FC1E9"),
-                   alpha =0.05, 
-                   mult.corr = "fdr", 
-                   sort.by = "fc",
-                   detect.lim = 1e-06, 
-                   pr.cutoff = 1e-6, 
-                   max.show = 40,
-                   plot.type = "quantile.box",
-                   panels = c("fc","auroc"), 
-                   prompt = TRUE,
-                   feature.type = 'filtered', 
-                   verbose = 1)
-
-include_graphics(paste(output.prefix, "figure.SIAMCAT.ckassn.curat.pdf", sep="_"))
-
-check.confounders(siamcat.curat,
-                  fn.plot = paste(output.prefix, "figure.SIAMCAT.ckconfd.curat.pdf", sep="_"),
-                  meta.in = c("curat.covid.class", "sex", "age_category", "bmi_group"))
-
-include_graphics(paste(output.prefix, "figure.SIAMCAT.ckconfd.curat.pdf", sep="_"))
-
-# Only run this the once. It will take a long time. It requires siamcat input. 
-#siamcat_modelbuilder(siamcat)
-
-#Only run this if the model builder is NOT being ran
-siamcat.curat <- normalize.features(
-  siamcat.curat,
-  norm.method = "log.unit",
-  norm.param = list(
-    log.n0 = 1e-06,
-    n.p = 2,
-    norm.margin = 1
-  )
-)
-# Only run this if the model builder is NOT being ran
-siamcat.curat <-  create.data.split(
-  siamcat.curat,
-  num.folds = 10,
-  num.resample = 10
-)
-
-# This is the choosen model
-siamcat.curat <- train.model(
-  siamcat.curat,
-  method = "ridge"
-)
-siamcat.curat <- make.predictions(siamcat.curat)
-siamcat.curat <- evaluate.predictions(siamcat.curat)
-
-model.evaluation.plot(siamcat.curat, fn.plot = paste(output.prefix, "figure.SIAMCAT.eval.plot.curat.pdf", sep="_"))
-
-include_graphics(paste(output.prefix, "figure.SIAMCAT.eval.plot.curat.pdf", sep="_"))
-
-#siamcat.ridge
-model.interpretation.plot(
-  siamcat.curat, 
-  fn.plot = paste(output.prefix, "figure.SIAMCAT.intrp.curat.pdf", sep="_"),
-  color.scheme = "BrBG",
-  consens.thres = 0.5,
-  heatmap.type = "zscore",
-  limits = c(-3, 3), detect.lim = 1e-09,
-  max.show = 40, prompt=TRUE, verbose = 1)
-
-include_graphics(paste(output.prefix, "figure.SIAMCAT.intrp.curat.pdf", sep="_"))
-
-} else {
-   message("Not performing SIAMCAT ")
-}
 
 ```
