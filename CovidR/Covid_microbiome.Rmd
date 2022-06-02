@@ -152,7 +152,7 @@ ft
 # these graphs do not use the pseq as such. 
 
 # sets the font size
-myfont <- 18
+myfont <- 20
 #remove duplicate curat.freq columns
 mydata[["curat.combined"]] <- mydata[["curat.combined"]][, !duplicated(colnames(mydata[["curat.combined"]]))]
 
@@ -196,7 +196,7 @@ ct1 <- ggplot(subset(mydata[["curat.combined" ]]), aes( area=curat.freq,fill=hl.
 figure.curat.class <- c2 + ct1 + plot_layout(ncol = 2) + plot_annotation(
   title = fig_title_owid_curat,
   caption = curat.total.caption
-) & theme(plot.tag = element_text(size = 14))
+) & theme(plot.tag = element_text(size = 16))
 
 # Saves the figures
 save_plot(paste(output.prefix, "figure.curat.class.png", sep="_"), figure.curat.class, ncol = 2,base_height = 11.69, base_width = 8.27)
@@ -306,36 +306,34 @@ t1
 
 # CURAT  Generates the meta data
 curat.meta <- alpha_d_curat(mypseq[["curat.recode.country.comp.filter.pseq"]])
-
 # CURAT generates the country alpha diversity. The number in the palettes must equal the number of groups in bmi.pairs
 alpha.p1.curat <-ggviolin(curat.meta, x = "country", y = "Shannon",
                   add = "boxplot", fill = "country") +
     theme(axis.text.x = element_blank(),axis.ticks = element_blank()) + 
+   theme(axis.title.y = element_text(size = 16)) +
     theme(legend.position="bottom",legend.title = element_blank()) + 
     xlab("") + 
   scale_fill_Sharmalab(palette="curat")  
-
 # CURAT high and low graphs   
 alpha.p2.curat <- ggviolin(data=subset(curat.meta, !is.na(curat.covid.class)), x = "curat.covid.class", y = "Shannon", add = "boxplot", fill = "curat.covid.class", na.rm = TRUE)  + 
-  scale_fill_Sharmalab(palette="two_group_curat")  
-
+  scale_fill_Sharmalab(palette="two_group_curat")  +
+   theme(axis.title.y = element_text(size = 16))
 # adds the stats  
 alpha.p2.curat <<- alpha.p2.curat + stat_compare_means(comparisons = covid.pairs) + 
     xlab("Covid Hospitalisations") + 
     theme(legend.position="bottom", axis.text.x = element_blank(),axis.ticks = element_blank()) +
-    guides(fill=guide_legend(title="Covid Hospitalisations"))
-
+    guides(fill=guide_legend(title="Covid Hospitalisations", title.theme = element_text(size = 16))) + 
+   theme(axis.title.x = element_text(size = 16))
 # Combines the graphs to the final figure
 fig.alpha.curat.group <- alpha.p1.curat + alpha.p2.curat +
   plot_layout(guides = 'collect') + plot_annotation(tag_levels = 'A',
   title = fig_title_alpha ,
-  subtitle = 'Individual Countries and resulting Disease Group') & theme(legend.position = 'bottom')
-
+  subtitle = 'Individual Countries and resulting Disease Group') & theme(legend.position = 'bottom', legend.text = element_text(size = 16))
 # Saves the output
 save_plot(paste(output.prefix, "figure.alpha.group.png", sep="_"), fig.alpha.curat.group, ncol = 2, base_height = 11.69, base_width = 8.2)  
-
 # Include sthe graphic
 include_graphics(paste(output.prefix, "figure.alpha.group.png", sep="_"))
+```
 ```
 
 # Abundance Graph
@@ -350,7 +348,7 @@ curated.barplot  <- plot_composition(curat.pseq.comp.filter.phylum, average_by =
   theme(legend.text = element_text(face="italic")) + 
   theme_classic() + 
   labs(x="Disease Grouping") + 
-  theme(legend.title = element_text(size = 10), legend.text = element_text(size = 10)) + 
+  theme(legend.title = element_text(size = 16), legend.text = element_text(size = 16)) + 
   scale_x_discrete(labels=c("LOW" = "Low","HIGH" = "High")) + 
   scale_fill_brewer(palette = "Paired") 
 
