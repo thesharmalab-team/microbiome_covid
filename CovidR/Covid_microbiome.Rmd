@@ -371,7 +371,7 @@ ggplot(data = ., aes(x = curat.covid.class , y = Abundance)) +
 p.abdunace <- curated.barplot + curat.abund + plot_annotation(tag_levels = 'A',
   title = fig_title_abudance) 
 
-save_plot(paste(output.prefix, "figure.abdunace.png", sep="_"), p.abdunace, ncol = 2, base_height = 11.69, base_width = 8.2) 
+save_plot(paste(output.prefix, "figure.abdunace.png", sep="_"), p.abdunace, ncol = 2, base_height = 11.69, base_width = 9.5) 
 
 include_graphics(paste(output.prefix, "figure.abdunace.png", sep="_"))
 ```
