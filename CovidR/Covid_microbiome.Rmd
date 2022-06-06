@@ -52,9 +52,9 @@ theme_set(theme_Sharmalab())
 # Covid data set
 data_hosp <- read.csv("Covid_Curat_pop.csv")
 
-# AD Range of the graphs
-hosp.range <- c(258.09,5621.29)
-
+# COVID Range of the graphs
+#hosp.range <- c(258.09,5621.29)
+hosp.range <- c(0,6000)
 #### THIS IS THE HIGH AND LOW GROUPS THAT WILL BE USED THROUGHOUT THE SCRIPT 
 # loads the Our World in Data and relabels straight away. 
 covid.owid <- as.data.frame(data_hosp, col_names = TRUE) %>%
