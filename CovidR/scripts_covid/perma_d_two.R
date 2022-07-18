@@ -36,7 +36,7 @@ perma_d_two <- function(mypseq) { # x & y must be either p.low,p.med or p.high
   #dev.off() 
   temp <- as.data.frame(top.coef)
   temp$label <- rownames(temp) 
-  temp$label <- sub("s_*", "", temp[,2])
+  temp$label <- sub("_*", "", temp[,2])
   #Add this so the label is in Italics, requires library(ggtext) & library(mdthemes)
   temp$label <- paste("*",temp$label, "*", sep="")
 
