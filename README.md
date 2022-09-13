@@ -19,7 +19,7 @@ The folder CovidR contains all the information required for the R analysis. This
 
 
 The folder CovidTDA contains all the information required for the TDA analysis. This is grouped into subfolders: data and scripts, and output.
- - CovidTDA/data and scripts contains all input data, both raw and filtered, as well as the scripts used for filtering and wrangling.
+ - CovidTDA/data_and_scripts contains all input data, both raw and filtered, as well as the scripts used for filtering and wrangling.
 
  - fullTDA_cleared is the final version of the full code utilised for the TDA analysis pipeline, included in this folder.
 
